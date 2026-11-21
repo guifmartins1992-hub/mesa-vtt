@@ -24,7 +24,7 @@ button{border:0;border-radius:10px;padding:12px 16px;background:#8d72e8;color:wh
 <div class="actions"><button class="secondary" id="join">Solicitar entrada</button></div>
 <div id="lobbyStatus" class="status hidden"></div>
 <div id="masterArea" class="hidden"><h3>Solicitações de entrada</h3><div id="requests"></div><h3>Jogadores na mesa</h3><div id="members"></div><div class="actions"><button class="secondary" id="toggleEntry">Fechar entrada</button><button id="enterMaster">Entrar no VTT</button></div></div>
-<div id="waitingArea" class="hidden"><h3>Aguardando aprovação do Mestre…</h3><p>Esta página vai avisar quando sua entrada for autorizada.</p></div>
+<div id="waitingArea" class="hidden"><h3>Aguardando aprovação do Mestre…</h3><p>Esta página vai avisar quando sua entrada for autorizada.</p></div><div class="actions"><button id="enterPlayer" class="hidden">Entrar no VTT</button></div>
 </section></main>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
@@ -32,7 +32,7 @@ const SUPABASE_URL='https://dffaohrfdpzneaxrskka.supabase.co';
 const SUPABASE_KEY='sb_publishable_dezPrTyFioS7xTRPG4fFhA_tiIJDZwE';
 const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
-let user=null,activeRoom=null,isMaster=false,entryOpen=true,watcher=null;
+let user=null,activeRoom=null,isMaster=false,entryOpen=true,watcher=null,pollHandle=null,requestId=null;
 function showStatus(id,msg){$(id).textContent=msg;$(id).classList.remove('hidden')}
 function hideStatus(id){$(id).classList.add('hidden')}
 async function ensureAuth(){
@@ -92,10 +92,10 @@ $('join').onclick=async()=>{
  $('join').disabled=true;try{const {data,error}=await sb.rpc('request_room_access',{p_code:code});if(error)throw error;
  const {data:room}=await sb.from('rooms').select('id,name').eq('code',code).maybeSingle();
  if(!room)throw new Error('Solicitação enviada, mas não foi possível localizar a mesa.');
- showStatus('lobbyStatus','Solicitação enviada. Aguarde o Mestre aprovar.');await waitForApproval(room.id);
+ showStatus('lobbyStatus','Solicitação enviada. Aguarde o Mestre aprovar.');await waitForApproval(room.id,data);
  }catch(e){showStatus('lobbyStatus',e.message||String(e))}finally{$('join').disabled=false}
 };
 $('toggleEntry').onclick=async()=>{const {error}=await sb.rpc('set_room_entry',{p_room_id:activeRoom.id,p_open:!entryOpen});if(error){alert(error.message);return}entryOpen=!entryOpen;$('toggleEntry').textContent=entryOpen?'Fechar entrada':'Reabrir entrada'};
 $('enterMaster').onclick=loadVTT;
-const enterPlayer=document.createElement('button');enterPlayer.id='enterPlayer';enterPlayer.textContent='Entrar no VTT';enterPlayer.className='hidden';enterPlayer.onclick=loadVTT;$('waitingArea').append(enterPlayer);
+$('enterPlayer').onclick=loadVTT;
 </script></body></html>
