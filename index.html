@@ -14,7 +14,28 @@ const $=id=>document.getElementById(id);let mode='master',user=null,activeRoom=n
 function status(id,msg){$(id).textContent=msg;$(id).classList.remove('hidden')}
 function choose(which){mode=which;$('roles').classList.add('hidden');$('setup').classList.remove('hidden');$('masterFields').classList.toggle('hidden',which!=='master');$('playerFields').classList.toggle('hidden',which!=='player');$('setupTitle').textContent=which==='master'?'♛ Entrar como Mestre':'⚔ Entrar como Jogador';$('setupHint').textContent=which==='master'?'Digite seu nome e crie uma sala. Um código de convite será gerado para você compartilhar.':'Digite seu nome e o código da sala. Com o código correto, você entra diretamente.';$('setupStatus').classList.add('hidden')}
 async function prepareUser(){const nick=$('nickname').value.trim();if(nick.length<2||nick.length>24)throw Error('Digite um nome entre 3 e 24 caracteres.');let {data:{session}}=await sb.auth.getSession();if(!session){const {data,error}=await sb.auth.signInAnonymously();if(error)throw Error('A sessão temporária não iniciou. O login anônimo precisa estar habilitado no Supabase. Detalhe: '+error.message);session=data.session}user=session.user;const {error}=await sb.rpc('set_my_username',{p_username:nick});if(error)throw error;$('hello').textContent=nick}
-async function loadVTT(){const s=document.createElement('div');s.style.cssText='position:fixed;inset:0;background:#101218;color:white;display:grid;place-items:center;z-index:99999;font:16px system-ui';s.textContent='Carregando sua mesa…';document.body.append(s);try{const r=await fetch('https://raw.githubusercontent.com/guifmartins1992-hub/mesa-vtt/main/mesa-vtt-v4.html.gz.b64',{cache:'no-store'});if(!r.ok)throw Error('Falha ao baixar o VTT ('+r.status+')');const bin=atob((await r.text()).replace(/\s/g,''));const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));const html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();document.open();document.write(html);document.close()}catch(e){s.textContent='Erro ao abrir o VTT: '+e.message}}
+async function loadVTT(){const s=document.createElement('div');s.style.cssText='position:fixed;inset:0;background:#101218;color:white;display:grid;place-items:center;z-index:99999;font:16px system-ui';s.textContent='Carregando sua mesa…';document.body.append(s);try{const r=await fetch('https://raw.githubusercontent.com/guifmartins1992-hub/mesa-vtt/main/mesa-vtt-v4.html.gz.b64',{cache:'no-store'});if(!r.ok)throw Error('Falha ao baixar o VTT ('+r.status+')');const bin=atob((await r.text()).replace(/\s/g,''));const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));let html=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+const nick=($('nickname')?.value||'Jogador').trim();
+const patch=`<style>
+/* Removida a ferramenta experimental de fundo; o seletor de avatar permanece disponível. */
+button,label,[role="button"],.control,.setting{ }
+</style>
+<script>
+(()=>{const nick=${JSON.stringify(nick)};
+const hideBackground=()=>{const re=/utilizar fundo|fundo verde|imagem de fundo|remover fundo|background removal|background image|chroma key/i;
+document.querySelectorAll('button,label,[role="button"],.control,.setting').forEach(el=>{
+ const t=(el.innerText||el.textContent||'').trim();
+ if(t && re.test(t) && t.length<100 && !/avatar/i.test(t)){const target=el.closest('label')||el.closest('.control')||el;target.style.setProperty('display','none','important');}
+});
+};
+const replaceNick=root=>{const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;while(n=walker.nextNode()){if(/^\\s*Você\\s*:?\\s*$/.test(n.nodeValue)){n.nodeValue=n.nodeValue.replace(/Você/g,nick);}}};
+const run=()=>{hideBackground();replaceNick(document.body);};
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+new MutationObserver(run).observe(document.documentElement,{subtree:true,childList:true,characterData:true});
+})();
+<\/script>`;
+html=html.replace(/<\\/body>/i,patch+'</body>');
+document.open();document.write(html);document.close()}catch(e){s.textContent='Erro ao abrir o VTT: '+e.message}}
 async function startMaster(room){activeRoom=room;isMaster=true;$('setup').classList.add('hidden');$('lobby').classList.remove('hidden');$('masterArea').classList.remove('hidden');$('waitingArea').classList.add('hidden');$('lobbyStatus').innerHTML='Sala criada! Código para convidar jogadores:<br><span class="code"></span><br>Qualquer pessoa com este código poderá entrar diretamente.';$('lobbyStatus').querySelector('.code').textContent=room.code;$('enterMaster').classList.remove('hidden');$('enterMaster').style.display='block'}
 async function joinByCode(code){const {data,error}=await sb.rpc('join_room_with_code',{p_code:code});if(error)throw error;const room=Array.isArray(data)?data[0]:data;if(!room?.room_id)throw Error('Não foi possível entrar na sala.');activeRoom={id:room.room_id};$('setup').classList.add('hidden');$('lobby').classList.remove('hidden');$('masterArea').classList.add('hidden');$('waitingArea').classList.add('hidden');status('lobbyStatus','Você entrou na sala "'+room.room_name+'". Abrindo o VTT…');await loadVTT()}
 $('asMaster').onclick=()=>choose('master');$('asPlayer').onclick=()=>choose('player');$('back').onclick=()=>{$('setup').classList.add('hidden');$('roles').classList.remove('hidden')};
