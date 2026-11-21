@@ -1,19 +1,38 @@
-# Mesa VTT
+# Mesa VTT — protótipo V4
 
-Protótipo inicial de mesa virtual de RPG.
+Esta publicação usa como base o arquivo V4 enviado pelo proprietário do projeto.
+
+## Abrir
+Depois que o GitHub Pages concluir a publicação:
+https://guifmartins1992-hub.github.io/mesa-vtt/
+
+## Recursos presentes no protótipo V4
+- Interface de mesa virtual com área principal e painel lateral.
+- Câmera e microfone locais, com seleção de dispositivos.
+- Janela de câmera flutuante, redimensionável e controles de janela.
+- Escolha de avatar por imagem local.
+- Opções de fundo verde e imagem de fundo; o código carrega MediaPipe Selfie Segmentation para o processamento de fundo.
+- Chat local e janela separada de chat.
+- Rolagem de dados com grupos, modificadores, operações e vantagem/desvantagem.
+- Ficha local com recursos, contadores, sucessos, falhas e anotações.
+- Persistência local no navegador.
+
+## Limites importantes
+Esta versão ainda é um protótipo de navegador. O armazenamento e a comunicação entre janelas usam recursos locais do navegador; isso não cria uma sala multiplayer entre computadores diferentes.
+
+Ainda não estão configurados:
+- cadastro/login e salas privadas acessíveis pela internet;
+- sincronização em tempo real de chat, fichas, dados e estado da sala entre jogadores;
+- transmissão de câmera e microfone entre participantes;
+- compartilhamento de tela remoto com permissão validada no servidor;
+- armazenamento em nuvem de avatares e fichas.
+
+Para habilitar esses recursos, falta conectar um backend (por exemplo Supabase) e um servidor de mídia em tempo real (por exemplo LiveKit), além das respectivas credenciais e configuração de implantação.
 
 ## Publicação
-O workflow em `.github/workflows/pages.yml` publica automaticamente a raiz do repositório na branch `main` pelo GitHub Pages. Em Settings → Pages, selecione GitHub Actions como origem, caso ainda não esteja selecionada.
+O workflow em `.github/workflows/pages.yml` publica a raiz do repositório na branch `main` usando GitHub Pages. Em **Settings → Pages**, a origem deve estar como **GitHub Actions**.
 
-## Recursos presentes nesta versão
-- Área principal para compartilhamento de tela local.
-- Janela de câmera flutuante, arrastável e redimensionável.
-- Acesso local à câmera e microfone, seletor de entrada e medidor de atividade.
-- Avatar selecionado de arquivo local.
-- Controles visuais de fundo verde e imagem.
-- Chat local e rolagem com grupos, modificadores, operações e vantagem/desvantagem.
-- Ficha com 3 recursos, 10 contadores independentes de 10 marcações, sucessos, falhas e anotações salvas no navegador.
-
-## Limitações
-Esta versão é somente um protótipo local. Não tem salas multiplayer, login, sincronização, chat remoto, transmissão de áudio/vídeo entre participantes, permissões de mestre ou fichas privadas na nuvem. O compartilhamento de tela só aparece neste navegador. A seleção de imagem/fundo verde ainda não remove o fundo nem segmenta automaticamente a pessoa.
-Para multiplayer será necessário configurar backend e serviço de mídia em tempo real (por exemplo Supabase e LiveKit).
+## Arquivos
+- `index.html`: carregador da aplicação publicada.
+- `mesa-vtt-v4.html.gz.b64`: pacote comprimido do HTML V4 original.
+- `.github/workflows/pages.yml`: publicação automática pelo GitHub Actions.
